@@ -5,6 +5,7 @@ use std::io;
 use std::io::{Write, stdout};
 use std::process;
 
+#[derive(Debug)]
 struct Gamestate {
     total_win: i32,
     retry_limit: i32,
@@ -17,6 +18,9 @@ impl Gamestate {
     fn add_total(&mut self, amount: i32) {
         self.total_win += amount;
     }
+    fn decrease_retry(&mut self, amount: i32) {
+        self.retry_limit -= amount;
+    }
 }
 
 fn main() {
@@ -24,6 +28,7 @@ fn main() {
     let mut rng = rand::rng();
     let rand = rng.random_range(1..=100);
     let mut input = String::new();
+    let mut enter = String::new();
 
     let mut state = Gamestate {
         total_win: 0,
@@ -55,15 +60,29 @@ fn main() {
         if rand == parse_str {
             println!("you win! Guess({})", rand);
             state.add_total(1);
-            break;
+            println!("{:#?}", state);
+            println!("Press Enter To Exit");
+            io::stdin().read_line(&mut enter).expect("error");
+            Gamestate::exit();
         }
 
         if parse_str > rand {
             println!("Note: Too High!");
+            state.decrease_retry(1);
+            println!("retry: {}", state.retry_limit);
         }
 
         if parse_str < rand {
             println!("Note: Too Low!");
+            state.decrease_retry(1);
+            println!("retry: {}", state.retry_limit);
+        }
+
+        if state.retry_limit == 0 {
+            println!("You lose!");
+            println!("Press Enter To Exit");
+            io::stdin().read_line(&mut enter).expect("Error");
+            Gamestate::exit();
         }
     }
 }
